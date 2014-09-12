@@ -1,26 +1,32 @@
 class MongoRetry
 
-
-  RETRY_SLEEPS = [1, 5, 10].freeze
-  RETRYABLE_EXCEPTIONS = [
+  DEFAULT_RETRY_SLEEPS = [1, 5, 10].freeze
+  DEFAULT_RETRYABLE_EXCEPTIONS = [
     ::Mongo::ConnectionError,
     ::Mongo::ConnectionTimeoutError,
     ::Mongo::ConnectionFailure,
     ::Mongo::OperationTimeout
   ]
 
-  def initialize(connection, logger = nil, delayer = Kernel.method(:sleep))
+  DEFAULT_OPTIONS = {
+    delayer: Kernel.method(:sleep),
+    retries: DEFAULT_RETRY_SLEEPS,
+    exceptions: DEFAULT_RETRYABLE_EXCEPTIONS,
+    retry_exceptions: DEFAULT_RETRYABLE_EXCEPTIONS,
+    logger: nil
+  }
+
+  def initialize(connection, options = {})
+    @options = DEFAULT_OPTIONS.merge(options)
     @connection = connection
-    @delayer = delayer
-    @logger = logger || proc {}
   end
 
-  def connection_guard(retries = RETRY_SLEEPS.dup)
+  def connection_guard(retries = @options[:retries].dup)
     yield
-  rescue *RETRYABLE_EXCEPTIONS => e
+  rescue *@options[:exceptions] => e
     if retry_timeout = retries.pop
       log(:retry, e)
-      @delayer.call(retry_timeout)
+      @options[:delayer].call(retry_timeout)
       reconnect!
       retry
     else
@@ -32,14 +38,14 @@ class MongoRetry
   private
 
   def log(reason, exception)
-    if @logger
-      @logger.call(reason, exception)
+    if @options[:logger]
+      @options[:logger].call(reason, exception)
     end
   end
 
   def reconnect!
     @connection.reconnect
-  rescue *RETRYABLE_EXCEPTIONS => e
+  rescue *@options[:retry_exceptions] => e
     # Mongo ruby driver fails sometimes on handover, screw that...
     log(:reconnect_fail, e)
   end

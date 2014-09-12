@@ -9,7 +9,7 @@ describe MongoRetry do
     delayer.stub(:delay)
     logger.stub(:log)
   end
-  subject { described_class.new(connection, logger.method(:log), delayer.method(:delay)) }
+  subject { described_class.new(connection, :logger => logger.method(:log), :delayer => delayer.method(:delay)) }
 
 
   [Exception, StandardError].each do |error|
