@@ -1,25 +1,20 @@
 require 'spec_helper'
 describe MongoRetry do
-  let(:connection) { double('connection') }
-  let(:delayer) { double('delayer') }
-  let(:logger) { double('logger')}
+  let(:connection) { double('connection', reconnect: true, do_something: true) }
+  let(:delayer) { double('delayer', delay: true) }
+  let(:logger) { double('logger', log: true)}
 
-  before do
-    connection.stub(:reconnect)
-    delayer.stub(:delay)
-    logger.stub(:log)
-  end
   subject { described_class.new(connection, :logger => logger.method(:log), :delayer => delayer.method(:delay)) }
-
 
   [Exception, StandardError].each do |error|
     it "does not rescue #{error}" do
-      connection.should_receive(:do_something).exactly(:once).and_raise(error)
+      allow(connection).to receive(:do_something).and_raise(error)
       expect do
         subject.connection_guard do
           connection.do_something
         end
       end.to raise_error(error)
+      expect(connection).to have_received(:do_something).exactly(:once)
     end
   end
 
@@ -32,14 +27,26 @@ describe MongoRetry do
     describe error.name do
 
       it "returns the value if no error" do
-        connection.should_receive(:do_something).and_return(:foo)
-        subject.connection_guard do
+        allow(connection).to receive(:do_something).and_return(:foo)
+        result = subject.connection_guard do
           connection.do_something
-        end.should == :foo
+        end
+        expect(result).to eq(:foo)
       end
 
       it "retries max 3 times in case of #{error}" do
-        connection.should_receive(:do_something).exactly(4).times.and_raise(error)
+        allow(connection).to receive(:do_something).and_raise(error)
+        begin
+          subject.connection_guard do
+            connection.do_something
+          end
+        rescue error
+        end
+        expect(connection).to have_received(:do_something).exactly(4).times
+      end
+
+      it "raises error #{error}" do
+        allow(connection).to receive(:do_something).and_raise(error)
         expect do
           subject.connection_guard do
             connection.do_something
@@ -48,71 +55,81 @@ describe MongoRetry do
       end
 
       it 'reconnects in case of mongo error' do
-        connection.should_receive(:reconnect).exactly(3).times
-        connection.stub(:do_something).and_raise(error)
-        expect do
+        allow(connection).to receive(:reconnect).and_raise(error)
+        allow(connection).to receive(:do_something).and_raise(error)
+        begin
           subject.connection_guard do
             connection.do_something
           end
-        end.to raise_error(error)
+        rescue error
+        end
+        expect(connection).to have_received(:reconnect).exactly(3).times
       end
 
       it 'ignores mongo reconnect errors' do
-        connection.should_receive(:reconnect).and_raise(error)
-        connection.stub(:do_something).and_raise(error)
-        expect do
+        allow(connection).to receive(:reconnect).and_raise(error)
+        allow(connection).to receive(:do_something).and_raise(error)
+        begin
           subject.connection_guard do
             connection.do_something
           end
-        end.to raise_error(error)
+        rescue error
+        end
+        expect(connection).to have_received(:reconnect).exactly(3).times
       end
 
       it 'does not rescue non mongo errors when reconnecting' do
-        connection.should_receive(:reconnect).and_raise(ArgumentError)
-        connection.stub(:do_something).and_raise(error)
-        expect do
+        allow(connection).to receive(:reconnect).and_raise(ArgumentError)
+        allow(connection).to receive(:do_something).and_raise(error)
+        begin
           subject.connection_guard do
             connection.do_something
           end
-        end.to raise_error(ArgumentError)
+        rescue ArgumentError
+        end
+        expect(connection).to have_received(:reconnect)
       end
 
       it 'calls sleep in each retry with the correct value' do
-        connection.should_receive(:reconnect).and_raise(error)
-        delayer.should_receive(:delay).once.with(1)
-        delayer.should_receive(:delay).once.with(5)
-        delayer.should_receive(:delay).once.with(10)
-        connection.stub(:do_something).and_raise(error)
-        expect do
+        allow(connection).to receive(:do_something).and_raise(error)
+        allow(connection).to receive(:do_something).and_raise(error)
+        begin
           subject.connection_guard do
             connection.do_something
           end
-        end.to raise_error(error)
+        rescue error
+        end
+        expect(delayer).to have_received(:delay).once.with(1)
+        expect(delayer).to have_received(:delay).once.with(5)
+        expect(delayer).to have_received(:delay).once.with(10)
+        expect(connection).to have_received(:reconnect).exactly(3).times
       end
 
       it 'logs each connection failure' do
         exception = error.new
-        logger.should_receive(:log).with(:retry, exception).exactly(3).times
-        logger.should_receive(:log).with(:fail, exception).exactly(:once)
-        connection.stub(:do_something).and_raise(exception)
-        expect do
+        allow(connection).to receive(:do_something).and_raise(exception)
+        begin
           subject.connection_guard do
             connection.do_something
           end
-        end.to raise_error(error)
+        rescue error
+        end
+        expect(logger).to have_received(:log).with(:retry, exception).exactly(3).times
+        expect(logger).to have_received(:log).with(:fail, exception).exactly(:once)
       end
 
       it 'logs each reconnection failure' do
         exception = error.new
-        connection.stub(:do_something).and_raise(exception)
-        connection.stub(:reconnect).and_raise(exception)
-        logger.should_receive(:log).with(:retry, exception).exactly(3).times
-        logger.should_receive(:log).with(:reconnect_fail, exception).exactly(3).times
-        expect do
+        allow(connection).to receive(:do_something).and_raise(exception)
+        allow(connection).to receive(:reconnect).and_raise(exception)
+        begin
           subject.connection_guard do
             connection.do_something
           end
-        end.to raise_error(error)
+        rescue error
+        end
+        expect(logger).to have_received(:log).with(:retry, exception).exactly(3).times
+        expect(logger).to have_received(:log).with(:reconnect_fail, exception).exactly(3).times
       end
     end
   end
