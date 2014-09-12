@@ -1,3 +1,5 @@
+require 'mongo'
+
 class MongoRetry
 
   DEFAULT_RETRY_SLEEPS = [1, 5, 10].freeze
