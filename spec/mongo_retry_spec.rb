@@ -11,6 +11,18 @@ describe MongoRetry do
   end
   subject { described_class.new(connection, logger.method(:log), delayer.method(:delay)) }
 
+
+  [Exception, StandardError].each do |error|
+    it "does not rescue #{error}" do
+      connection.should_receive(:do_something).exactly(:once).and_raise(error)
+      expect do
+        subject.connection_guard do
+          connection.do_something
+        end
+      end.to raise_error(error)
+    end
+  end
+
   [
     ::Mongo::ConnectionError,
     ::Mongo::ConnectionTimeoutError,
@@ -19,6 +31,12 @@ describe MongoRetry do
   ].each do |error|
     describe error.name do
 
+      it "returns the value if no error" do
+        connection.should_receive(:do_something).and_return(:foo)
+        subject.connection_guard do
+          connection.do_something
+        end.should == :foo
+      end
 
       it "retries max 3 times in case of #{error}" do
         connection.should_receive(:do_something).exactly(4).times.and_raise(error)
@@ -27,17 +45,6 @@ describe MongoRetry do
             connection.do_something
           end
         end.to raise_error(error)
-      end
-
-      [Exception, StandardError].each do |other_error|
-        it "does not rescue #{other_error}" do
-          connection.should_receive(:do_something).exactly(:once).and_raise(other_error)
-          expect do
-            subject.connection_guard do
-              connection.do_something
-            end
-          end.to raise_error(other_error)
-        end
       end
 
       it 'reconnects in case of mongo error' do
