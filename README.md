@@ -8,9 +8,9 @@ require 'mongo-retry'
 client = Mongo::MongoClient.new
 retryer = MongoRetry.new(client)
 
-doc = retryer.connection_guard { # Will retry after 1, 5, 10 seconds and eventually fail by throwing the exception thrown on the 4th attempt
-  client.db('foo')['bar'].find_one()
-}
+# Will retry after 1, 5, 10 seconds and eventually fail
+# by throwing the exception thrown on the 4th attempt
+doc = retryer.connection_guard { client.db('foo')['bar'].find_one() }
 
 ```
 
