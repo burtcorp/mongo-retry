@@ -46,7 +46,6 @@ class MongoRetry
   def reconnect!
     @connection.reconnect
   rescue *@options[:retry_exceptions] => e
-    # Mongo ruby driver fails sometimes on handover, screw that...
     log(:reconnect_fail, e)
   end
 end
