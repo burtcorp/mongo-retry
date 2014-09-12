@@ -6,9 +6,9 @@ require 'mongo/retry'
 
 Gem::Specification.new do |s|
   s.name          = 'mongo-retry'
-  s.version       = '0.1.0'
+  s.version       = '0.1.1'
   s.authors       = ['Erik Fonselius', 'Sofia Larsson']
-  s.email         = ['fonsan@burtcorp.com']
+  s.email         = ['fonsan@burtcorp.com', 'karinsofiapaulina@gmail.com']
   s.homepage      = 'http://github.com/burtcorp/mongo-retry'
   s.summary       = %q{mongo-retry helper}
   s.description       = %q{mongo-retry helper}
