@@ -9,7 +9,7 @@ require 'mongo'
 require 'mongo-retry'
 
 client = Mongo::MongoClient.new
-retryer = MongoRetry.new(client)
+retryer = Mongo::Retry.new(client)
 
 # Will retry after 1, 5, 10 seconds and eventually fail
 # by throwing the exception thrown on the 4th attempt
@@ -21,7 +21,7 @@ You may also specify the following optional parameters here with the default val
 
 ```ruby
 
-retryer = MongoRetry.new(client,  delayer: Kernel.method(:sleep),
+retryer = Mongo::Retry.new(client,  delayer: Kernel.method(:sleep),
     retries: DEFAULT_RETRY_SLEEPS,  # [1, 5, 10]
     exceptions: DEFAULT_RETRYABLE_EXCEPTIONS, # [::Mongo::ConnectionError,::Mongo::ConnectionTimeoutError,::Mongo::ConnectionFailure,::Mongo::OperationTimeout]
     retry_exceptions: DEFAULT_RETRYABLE_EXCEPTIONS, # [::Mongo::ConnectionError,::Mongo::ConnectionTimeoutError,::Mongo::ConnectionFailure,::Mongo::OperationTimeout]

@@ -2,7 +2,7 @@
 
 $: << File.expand_path('../lib', __FILE__)
 
-require 'mongo_retry'
+require 'mongo/retry'
 
 Gem::Specification.new do |s|
   s.name          = 'mongo-retry'
@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.description       = %q{mongo-retry helper}
   s.license       = 'MIT'
 
-  s.files         = Dir['lib/*.rb', 'README.md']
+  s.files         = Dir['lib/**/*.rb', 'README.md']
   s.test_files    = Dir['spec/*.rb']
   s.require_paths = %w(lib)
 
