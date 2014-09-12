@@ -1,5 +1,8 @@
 # Simple retry error handling on connection errors in for the [Mongo ruby driver](https://github.com/mongodb/mongo-ruby-driver)
 
+[![Build Status](https://travis-ci.org/burtcorp/mongo-retry.png?branch=master)](https://travis-ci.org/burtcorp/mongo-retry)
+[![Coverage Status](https://coveralls.io/repos/burtcorp/mongo-retry/badge.png)](https://coveralls.io/r/burtcorp/mongo-retry)
+
 In its simplest form
 ```ruby
 require 'mongo'
