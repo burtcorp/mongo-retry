@@ -35,7 +35,7 @@ logger should be a lambda with two arguments
 
 ```ruby
 logger = lambda { |reason, e|
-  # Where reason may be :retry, :fail, :reconnect_fail
+  # Where reason may be :retry, :fail, :refresh
   p reason
   p e
 }
@@ -50,11 +50,11 @@ doc = retryer.connection_guard {
 }
 # Would be identical have the same effect in respect to the logger as
 logger.call(:retry, exception)
-logger.call(:reconnect_fail, exception)
+logger.call(:refresh, exception)
 logger.call(:retry, exception)
-logger.call(:reconnect_fail, exception)
+logger.call(:refresh, exception)
 logger.call(:retry, exception)
-logger.call(:reconnect_fail, exception)
+logger.call(:refresh, exception)
 logger.call(:fail, exception)
 
 ```
