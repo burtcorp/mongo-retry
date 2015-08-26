@@ -29,7 +29,7 @@ module Mongo
       if retry_timeout = retries.pop
         log(:retry, e)
         @options[:delayer].call(retry_timeout)
-        reconnect!
+        refresh!
         retry
       else
         log(:fail, e)
@@ -45,10 +45,10 @@ module Mongo
       end
     end
 
-    def reconnect!
-      @connection.reconnect
+    def refresh!
+      @connection.refresh
     rescue *@options[:retry_exceptions] => e
-      log(:reconnect_fail, e)
+      log(:refresh, e)
     end
   end
 end

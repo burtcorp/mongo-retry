@@ -2,8 +2,6 @@
 
 $: << File.expand_path('../lib', __FILE__)
 
-require 'mongo/retry'
-
 Gem::Specification.new do |s|
   s.name          = 'mongo-retry'
   s.version       = '0.1.2'
