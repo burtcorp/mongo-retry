@@ -4,9 +4,9 @@ $: << File.expand_path('../lib', __FILE__)
 
 Gem::Specification.new do |s|
   s.name          = 'mongo-retry'
-  s.version       = '0.1.2'
-  s.authors       = ['Erik Fonselius', 'Sofia Larsson']
-  s.email         = ['fonsan@burtcorp.com', 'karinsofiapaulina@gmail.com']
+  s.version       = '0.2.0'
+  s.authors       = ['Erik Fonselius', 'Sofia Larsson', 'Gustav Munkby']
+  s.email         = ['fonsan@burtcorp.com', 'karinsofiapaulina@gmail.com', 'gustav.munkby@burtcorp.com']
   s.homepage      = 'http://github.com/burtcorp/mongo-retry'
   s.summary       = %q{mongo-retry helper}
   s.description       = %q{mongo-retry helper}
