@@ -4,10 +4,9 @@ module Mongo
   class Retry
     DEFAULT_RETRY_SLEEPS = [1, 5, 10].freeze
     DEFAULT_RETRYABLE_EXCEPTIONS = [
-      ::Mongo::ConnectionError,
-      ::Mongo::ConnectionTimeoutError,
-      ::Mongo::ConnectionFailure,
-      ::Mongo::OperationTimeout
+      ::Mongo::Error::SocketError,
+      ::Mongo::Error::SocketTimeoutError,
+      ::Mongo::Error::NeedPrimaryServer
     ]
 
     DEFAULT_OPTIONS = {
@@ -29,7 +28,7 @@ module Mongo
       if retry_timeout = retries.pop
         log(:retry, e)
         @options[:delayer].call(retry_timeout)
-        refresh!
+        reconnect!
         retry
       else
         log(:fail, e)
@@ -45,10 +44,10 @@ module Mongo
       end
     end
 
-    def refresh!
-      @connection.refresh
+    def reconnect!
+      @connection.reconnect
     rescue *@options[:retry_exceptions] => e
-      log(:refresh, e)
+      log(:reconnect, e)
     end
   end
 end
